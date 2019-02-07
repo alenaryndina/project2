@@ -82,26 +82,25 @@ class Ball(pygame.sprite.Sprite):
 
     def update(self):
 
-        self.rect = self.rect.move(self.vx, self.vy)
+        self.rect = self.rect.move(self.speed)
+        x,y = self.speed
         if pygame.sprite.spritecollideany(self, horizontal_borders):
-            self.vy = -self.vy
+            self.speed = (x,-y)
         if pygame.sprite.spritecollideany(self, vertical_borders):
-            self.vx = -self.vx
-        if pygame.sprite.spritecollideany(self, player):
-            self.vx = -self.vx
-            self.vy = -self.vy
-        if pygame.sprite.spritecollideany(self, blocks_sprites):
-            self.vx = -self.vx
-            self.vy = -self.vy
 
-            self.speed = 5
+            self.speed = (-x,y)
+        if pygame.sprite.spritecollideany(self, player):
+
+            self.speed = (-x+ random.randint(-1,1),-y)
+
+
 
 
 
 
 Border(1, 1, screen_width - 1, 1)
 
-Border(1, screen_height - 1, screen_width - 1, screen_height - 1)
+#Border(1, screen_height - 1, screen_width - 1, screen_height - 1)
 
 Border(1, 1, 1, screen_height - 1)
 
@@ -143,21 +142,17 @@ class Player(pygame.sprite.Sprite):
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
 
-    def handle(self, key):
-        if key == pygame.K_LEFT:
-            self.moving_left = not self.moving_left
-        else:
-            self.moving_right = not self.moving_right
 
     def update(self):
         if self.moving_left:
-            dx = -(min(self.offset, self.left))
+            dx = -int((min(self.offset, self.rect.left)))
         elif self.moving_right:
-            dx = min(self.offset, c.screen_width - self.right)
+            dx = int(min(self.offset, c.screen_width - self.rect.right))
         else:
             return
 
-        self.move(dx, 0)
+
+        self.rect = self.rect.move(dx, 0)
 
 
 def load_image(name, color_key=None):
@@ -217,10 +212,25 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 print(event.key)
                 if event.key == pygame.K_LEFT:
-                    self.player.rect.x -= 20
-                if event.key == pygame.K_RIGHT:
-                    self.player.rect.x += 20
+                    #self.player.rect.x -= 20
+                    self.player.moving_left = True
+                    self.player.moving_right = False
+                elif event.key == pygame.K_RIGHT:
+                    #self.player.rect.x += 20
 
+                    self.player.moving_left = False
+                    self.player.moving_right = True
+            elif event.type == pygame.KEYUP:
+                print(event.key)
+                if event.key == pygame.K_LEFT:
+                    #self.player.rect.x -= 20
+                    self.player.moving_left = False
+                    self.player.moving_right = False
+                elif event.key == pygame.K_RIGHT:
+                    #self.player.rect.x += 20
+
+                    self.player.moving_left = False
+                    self.player.moving_right = False
 
     def run(self):
         while not self.game_over:
@@ -348,7 +358,7 @@ class Game:
         self.bricks = bricks
 
     def handle_ball_collisions(self):
-        print(self.ball.rect.topleft, self.ball.speed )
+       #print(self.ball.rect.topleft, self.ball.speed )
 
         def intersect(obj, ball):
             edges = dict(left=Rect(obj.left, obj.top, 1, obj.height),
@@ -356,6 +366,7 @@ class Game:
                          top=Rect(obj.left, obj.top, obj.width, 1),
                          bottom=Rect(obj.left, obj.bottom, obj.width, 1))
             collisions = set(edge for edge, rect in edges.items() if ball.rect.colliderect(rect))
+
             if not collisions:
                 return None
 
@@ -384,16 +395,6 @@ class Game:
         edge = intersect(self.player.rect, self.ball)
         if edge is not None:
             self.sound_effects['paddle_hit'].play()
-        if edge == 'top':
-            speed_x = s[0]
-            speed_y = -s[1]
-            if self.player.moving_left:
-                speed_x -= 1
-            elif self.player.moving_left:
-                speed_x += 1
-            self.ball.speed = speed_x, speed_y
-        elif edge in ('left', 'right'):
-            self.ball.speed = (-s[0], s[1])
 
         # Hit floor
         if self.ball.rect.top > c.screen_height:
@@ -446,10 +447,10 @@ class Game:
 
         if self.start_level:
             self.start_level = False
-            self.show_message('GET READY!')
+            self.show_message('ПРИГОТОВИТЬСЯ!')
 
         if not self.bricks:
-            self.show_message('YOU WIN!!!')
+            self.show_message('ПОБЕДА!!!')
             self.is_game_running = False
             self.game_over = True
             return
@@ -464,9 +465,9 @@ class Game:
         all_sprites.update()
 
         if self.game_over:
-            self.show_message('GAME OVER!')
+            self.show_message('КОНЕЦ ИГРЫ! СЧЕТ:'+str(self.score),10000)
 
-    def show_message(self, text):
+    def show_message(self, text,time=1000):
 
 
         fon = pygame.transform.scale(load_image('123.jpg'), (screen_width, screen_height))
@@ -480,7 +481,7 @@ class Game:
         intro_rect.x = 10
         text_coord += intro_rect.height
         self.surface.blit(string_rendered, intro_rect)
-        for i in range(1000): 
+        for i in range(time):
             pygame.display.flip()
 
         return

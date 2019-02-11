@@ -1,4 +1,3 @@
-import colors
 
 screen_width = 800
 screen_height = 600
@@ -9,21 +8,21 @@ frame_rate = 90
 row_count = 6
 brick_width = 60
 brick_height = 20
-brick_color = colors.RED1
+brick_color =(155, 48, 255)
 offset_y = brick_height + 10
 
 ball_speed = 3
 ball_radius = 8
-ball_color = colors.GREEN
+ball_color =(255, 255, 0)
 
 paddle_width = 80
 paddle_height = 20
-paddle_color = colors.ALICEBLUE
+paddle_color = (240, 248, 255)
 paddle_speed = 6
 
 status_offset_y = 5
 
-text_color = colors.YELLOW1
+text_color = (255, 255, 0)
 initial_lives = 3
 lives_right_offset = 85
 lives_offset = screen_width - lives_right_offset
@@ -43,10 +42,7 @@ sounds_effects = dict(
 
 message_duration = 2
 
-button_text_color = colors.WHITE,
-button_normal_back_color = colors.INDIANRED1
-button_hover_back_color = colors.INDIANRED2
-button_pressed_back_color = colors.INDIANRED3
+button_text_color = (255, 255, 255)
 
 menu_offset_x = 20
 menu_offset_y = 300

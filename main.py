@@ -6,19 +6,16 @@ from datetime import datetime, timedelta
 from pygame.rect import Rect
 
 import os
-import time
 import pygame
 import config as c
-import colors
+
 
 all_sprites = pygame.sprite.Group()
 
 blocks_sprites = pygame.sprite.Group()
 
 
-from button import Button
-from game import Game
-from paddle import Paddle
+
 from text_object import TextObject
 
 
@@ -47,14 +44,13 @@ player = pygame.sprite.Group()
 
 
 class Border(pygame.sprite.Sprite):
-    # строго вертикальный или строго горизонтальный отрезок
     def __init__(self, x1, y1, x2, y2):
         super().__init__(all_sprites)
-        if x1 == x2:  # вертикальная стенка
+        if x1 == x2:
             self.add(vertical_borders)
             self.image = pygame.Surface([1, y2 - y1])
             self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
-        else:  # горизонтальная стенка
+        else:
             self.add(horizontal_borders)
             self.image = pygame.Surface([x2 - x1, 1])
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
@@ -62,12 +58,9 @@ class Border(pygame.sprite.Sprite):
 
 class Ball(pygame.sprite.Sprite):
     def __init__(self, x, y, r, color, speed):
-
         super().__init__(all_sprites)
-
         self.add(ball_sprite)
         self.rect = Rect(x - r, y - r, r * 2, r * 2)
-
         self.image = pygame.Surface((2 * r, 2 * r), pygame.SRCALPHA, 32)
         self.radius = r
         self.diameter = r * 2
@@ -81,16 +74,13 @@ class Ball(pygame.sprite.Sprite):
         r = pygame.draw.circle(surface, self.color, self.rect.topleft, self.radius)
 
     def update(self):
-
         self.rect = self.rect.move(self.speed)
         x,y = self.speed
         if pygame.sprite.spritecollideany(self, horizontal_borders):
             self.speed = (x,-y)
         if pygame.sprite.spritecollideany(self, vertical_borders):
-
             self.speed = (-x,y)
         if pygame.sprite.spritecollideany(self, player):
-
             self.speed = (-x+ random.randint(-1,1),-y)
 
 
@@ -99,8 +89,6 @@ class Ball(pygame.sprite.Sprite):
 
 
 Border(1, 1, screen_width - 1, 1)
-
-#Border(1, screen_height - 1, screen_width - 1, screen_height - 1)
 
 Border(1, 1, 1, screen_height - 1)
 
@@ -150,7 +138,6 @@ class Player(pygame.sprite.Sprite):
             dx = int(min(self.offset, c.screen_width - self.rect.right))
         else:
             return
-
 
         self.rect = self.rect.move(dx, 0)
 
@@ -210,25 +197,17 @@ class Game:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                print(event.key)
                 if event.key == pygame.K_LEFT:
-                    #self.player.rect.x -= 20
                     self.player.moving_left = True
                     self.player.moving_right = False
                 elif event.key == pygame.K_RIGHT:
-                    #self.player.rect.x += 20
-
                     self.player.moving_left = False
                     self.player.moving_right = True
             elif event.type == pygame.KEYUP:
-                print(event.key)
                 if event.key == pygame.K_LEFT:
-                    #self.player.rect.x -= 20
                     self.player.moving_left = False
                     self.player.moving_right = False
                 elif event.key == pygame.K_RIGHT:
-                    #self.player.rect.x += 20
-
                     self.player.moving_left = False
                     self.player.moving_right = False
 
@@ -245,14 +224,12 @@ class Game:
             pygame.display.update()
             self.clock.tick(self.frame_rate)
 
-    def add_life(self):
-        self.lives += 1
+
 
     def set_points_per_brick(self, points):
         self.points_per_brick = points
 
-    def change_ball_speed(self, dy):
-        self.ball.speed = (self.ball.speed[0], self.ball.speed[1] + dy)
+
 
     def new_game(self):
         self.is_game_running = True
@@ -328,10 +305,7 @@ class Game:
                         10,
                         (240, 248, 255),
                        5)
-        #self.keydown_handlers[pygame.K_LEFT].append(paddle.handle)
-        #self.keydown_handlers[pygame.K_RIGHT].append(paddle.handle)
-        #self.keyup_handlers[pygame.K_LEFT].append(paddle.handle)
-        #self.keyup_handlers[pygame.K_RIGHT].append(paddle.handle)
+
         self.player = player
         self.objects.append(self.player)
 
@@ -358,7 +332,6 @@ class Game:
         self.bricks = bricks
 
     def handle_ball_collisions(self):
-       #print(self.ball.rect.topleft, self.ball.speed )
 
         def intersect(obj, ball):
             edges = dict(left=Rect(obj.left, obj.top, 1, obj.height),
@@ -389,14 +362,12 @@ class Game:
                 else:
                     return 'right'
 
-            # Hit paddle
 
         s = self.ball.speed
         edge = intersect(self.player.rect, self.ball)
         if edge is not None:
             self.sound_effects['paddle_hit'].play()
 
-        # Hit floor
         if self.ball.rect.top > c.screen_height:
             self.lives -= 1
             if self.lives == 0:
@@ -404,15 +375,12 @@ class Game:
             else:
                 self.create_ball()
 
-        # Hit ceiling
         if self.ball.rect.top < 0:
             self.ball.speed = (s[0], -s[1])
 
-        # Hit wall
         if self.ball.rect.left < 0 or self.ball.rect.right > c.screen_width:
             self.ball.speed = (-s[0], s[1])
 
-        # Hit brick
         for brick in self.bricks:
             edge = intersect(brick.rect, self.ball)
             if not edge:
@@ -429,14 +397,11 @@ class Game:
                 self.ball.speed = (-s[0], s[1])
 
             if brick.special_effect is not None:
-                # Reset previous effect if any
                 if self.reset_effect is not None:
                     self.reset_effect(self)
 
-                # Trigger special effect
                 self.effect_start_time = datetime.now()
                 brick.special_effect[0](self)
-                # Set current reset effect function
                 self.reset_effect = brick.special_effect[1]
 
 
@@ -455,7 +420,7 @@ class Game:
             self.game_over = True
             return
 
-        # Reset special effect if needed
+
         if self.reset_effect:
             if datetime.now() - self.effect_start_time >= timedelta(seconds=c.effect_duration):
                 self.reset_effect(self)
@@ -467,7 +432,7 @@ class Game:
         if self.game_over:
             self.show_message('КОНЕЦ ИГРЫ! СЧЕТ:'+str(self.score),10000)
 
-    def show_message(self, text,time=1000):
+    def show_message(self, text,time=500):
 
 
         fon = pygame.transform.scale(load_image('123.jpg'), (screen_width, screen_height))

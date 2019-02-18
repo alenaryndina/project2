@@ -42,6 +42,56 @@ ball_sprite = pygame.sprite.Group()
 player = pygame.sprite.Group()
 
 
+def load_image(name, color_key=None):
+    fullname = os.path.join('data', name)
+    try:
+        image = pygame.image.load(fullname)
+    except pygame.error as message:
+        print('Cannot load image:', name)
+        raise SystemExit(message)
+
+    if color_key is not None:
+        if color_key == -1:
+            color_key = image.get_at((0, 0))
+        image.set_colorkey(color_key)
+        image = image.convert_alpha()
+    return image
+
+class Particle(pygame.sprite.Sprite):
+    fire = [load_image("star.png")]
+    for scale in (3, 5, 10):
+        fire.append(pygame.transform.scale(fire[0], (scale, scale)))
+
+    def __init__(self, pos, dx, dy):
+        super().__init__(all_sprites)
+        self.time_life = 50
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+
+        self.velocity = [dx, dy]
+        self.rect.x, self.rect.y = pos
+
+    def draw(self, surface):
+        if  self.time_life> 0 :
+            r = surface.blit(self.image, (self.rect.x, self.rect.y))
+
+
+
+    def update(self):
+        self.time_life -=1
+
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        if  self.time_life< 0 :
+            self.kill()
+
+
+
+def create_particles(position):
+    particle_count = 10
+    numbers = range(-5, 6)
+    for _ in range(particle_count):
+        Particle(position, random.choice(numbers), random.choice(numbers))
 
 class Border(pygame.sprite.Sprite):
     def __init__(self, x1, y1, x2, y2):
@@ -198,6 +248,7 @@ class Game:
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
+
                     self.player.moving_left = True
                     self.player.moving_right = False
                 elif event.key == pygame.K_RIGHT:
@@ -221,6 +272,7 @@ class Game:
 
             for o in self.objects:
                 o.draw(self.surface)
+
             pygame.display.update()
             self.clock.tick(self.frame_rate)
 
@@ -385,7 +437,12 @@ class Game:
             edge = intersect(brick.rect, self.ball)
             if not edge:
                 continue
+            print(self.ball.rect.topleft)
 
+            particle_count = 10
+            numbers = range(-5, 6)
+            for _ in range(particle_count):
+                self.objects.append(Particle(self.ball.rect.topleft, random.choice(numbers), random.choice(numbers)))
             self.sound_effects['brick_hit'].play()
             self.bricks.remove(brick)
             self.objects.remove(brick)
@@ -396,13 +453,6 @@ class Game:
             else:
                 self.ball.speed = (-s[0], s[1])
 
-            if brick.special_effect is not None:
-                if self.reset_effect is not None:
-                    self.reset_effect(self)
-
-                self.effect_start_time = datetime.now()
-                brick.special_effect[0](self)
-                self.reset_effect = brick.special_effect[1]
 
 
 
